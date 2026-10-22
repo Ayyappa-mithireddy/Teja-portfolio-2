@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import './IntroAnimation.css';
 
 // Multilingual Greetings without duplicate English "HELLO" — starts directly with world languages
@@ -36,7 +37,7 @@ const COLORS = {
 // Comprehensive font stack prioritizing Telugu ('Nirmala UI', 'Gautami', 'Noto Sans Telugu')
 const FONT_STACK = "'Montserrat', 'Nirmala UI', 'Gautami', 'Telugu Sangam MN', 'Noto Sans Telugu', 'Segoe UI', 'PingFang SC', 'Hiragino Sans', 'Malgun Gothic', 'Noto Sans Devanagari', Tahoma, sans-serif";
 
-const IntroAnimation = ({ onComplete }) => {
+const IntroAnimation = ({ onComplete, onRevealStart }) => {
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
   const ringRef = useRef(null);
@@ -45,10 +46,33 @@ const IntroAnimation = ({ onComplete }) => {
   const isCancelledRef = useRef(false);
   const isSkippingRef = useRef(false);
   const startTimeRef = useRef(null);
+  const hasFiredRevealStartRef = useRef(false);
+
+  // Lock body scroll and prevent touch scrolling on mobile while intro is active
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    const originalTouchAction = document.body.style.touchAction;
+    const originalOverscroll = document.body.style.overscrollBehavior;
+
+    document.body.style.overflow = 'hidden';
+    document.body.style.touchAction = 'none';
+    document.body.style.overscrollBehavior = 'none';
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.body.style.touchAction = originalTouchAction;
+      document.body.style.overscrollBehavior = originalOverscroll;
+    };
+  }, []);
 
   const triggerSkip = useCallback(() => {
     if (isSkippingRef.current) return;
     isSkippingRef.current = true;
+
+    if (!hasFiredRevealStartRef.current) {
+      hasFiredRevealStartRef.current = true;
+      if (onRevealStart) onRevealStart();
+    }
 
     // Fast iris reveal on skip (~220ms)
     const skipStart = performance.now();
@@ -79,7 +103,7 @@ const IntroAnimation = ({ onComplete }) => {
       }
     };
     requestAnimationFrame(animateSkip);
-  }, [onComplete]);
+  }, [onComplete, onRevealStart]);
 
   // Keyboard shortcut: Escape skips the intro
   useEffect(() => {
@@ -96,14 +120,30 @@ const IntroAnimation = ({ onComplete }) => {
     isCancelledRef.current = false;
     isSkippingRef.current = false;
     startTimeRef.current = null;
+    hasFiredRevealStartRef.current = false;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let width = window.innerWidth;
-    let height = window.innerHeight;
+    const getDimensions = () => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        return {
+          w: Math.round(rect.width) || window.innerWidth,
+          h: Math.round(rect.height) || window.innerHeight,
+        };
+      }
+      return {
+        w: window.innerWidth,
+        h: window.innerHeight,
+      };
+    };
+
+    const initialDims = getDimensions();
+    let width = initialDims.w;
+    let height = initialDims.h;
 
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     canvas.width = Math.floor(width * dpr);
@@ -114,8 +154,9 @@ const IntroAnimation = ({ onComplete }) => {
 
     const handleResize = () => {
       if (!canvas || isCancelledRef.current) return;
-      width = window.innerWidth;
-      height = window.innerHeight;
+      const dims = getDimensions();
+      width = dims.w;
+      height = dims.h;
       canvas.width = Math.floor(width * dpr);
       canvas.height = Math.floor(height * dpr);
       canvas.style.width = `${width}px`;
@@ -123,6 +164,7 @@ const IntroAnimation = ({ onComplete }) => {
       ctx.scale(dpr, dpr);
     };
     window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
 
     // Fast & Punchy Timeline (~3.0s total):
     // Phase A: 0ms -> 220ms (Awakening)
@@ -297,6 +339,10 @@ const IntroAnimation = ({ onComplete }) => {
         stepProgress = (elapsed - finalStart) / FINAL_HOLD_DURATION;
       } else {
         // Phase D: Aperture reveal
+        if (!hasFiredRevealStartRef.current) {
+          hasFiredRevealStartRef.current = true;
+          if (onRevealStart) onRevealStart();
+        }
         activeGreetingIdx = TOTAL_CYCLE_STEPS;
         const revealElapsed = elapsed - revealStart;
         const revealP = Math.min(1, revealElapsed / REVEAL_DURATION);
@@ -478,15 +524,17 @@ const IntroAnimation = ({ onComplete }) => {
       isCancelledRef.current = true;
       if (animFrameIdRef.current) cancelAnimationFrame(animFrameIdRef.current);
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
     };
-  }, [onComplete]);
+  }, [onComplete, onRevealStart]);
 
-  return (
+  const overlayContent = (
     <aside
       ref={containerRef}
       className="intro-animation-overlay"
       aria-label="Welcome greeting intro"
       role="region"
+      onTouchMove={(e) => e.preventDefault()}
     >
       <canvas
         ref={canvasRef}
@@ -523,6 +571,10 @@ const IntroAnimation = ({ onComplete }) => {
       />
     </aside>
   );
+
+  return typeof document !== 'undefined'
+    ? createPortal(overlayContent, document.body)
+    : overlayContent;
 };
 
 export default IntroAnimation;

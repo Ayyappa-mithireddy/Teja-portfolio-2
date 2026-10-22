@@ -25,6 +25,12 @@ function App() {
     }
   });
 
+  const [isRevealing, setIsRevealing] = useState(false);
+
+  const handleRevealStart = useCallback(() => {
+    setIsRevealing(true);
+  }, []);
+
   const handleIntroComplete = useCallback(() => {
     try {
       sessionStorage.setItem('spidy_intro_v5_seen', 'true');
@@ -36,16 +42,26 @@ function App() {
 
   return (
     <div className="app">
-      {showIntro && <IntroAnimation onComplete={handleIntroComplete} />}
-      <Nav />
-      <Hero />
-      <About />
-      <Skills />
-      <Projects />
-      <Education />
-      <Certifications />
-      <Contact />
-      <Footer />
+      {showIntro && (
+        <IntroAnimation
+          onRevealStart={handleRevealStart}
+          onComplete={handleIntroComplete}
+        />
+      )}
+      <div
+        className={`homepage-content ${showIntro && !isRevealing ? 'intro-hidden' : ''}`}
+        aria-hidden={showIntro && !isRevealing}
+      >
+        <Nav />
+        <Hero />
+        <About />
+        <Skills />
+        <Projects />
+        <Education />
+        <Certifications />
+        <Contact />
+        <Footer />
+      </div>
     </div>
   );
 }

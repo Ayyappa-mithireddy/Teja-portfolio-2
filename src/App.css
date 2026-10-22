@@ -2,9 +2,23 @@
 
 .app {
   min-height: 100vh;
+  min-height: 100dvh;
   font-family: 'Montserrat', sans-serif;
   color: var(--text-primary);
   background-color: var(--bg-primary);
   overflow-x: hidden;
   position: relative;
+}
+
+.homepage-content {
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* Isolate homepage and prevent 3D transforms / layout leaks during intro playback */
+.homepage-content.intro-hidden {
+  visibility: hidden !important;
+  pointer-events: none !important;
+  user-select: none !important;
 }
