@@ -1,0 +1,129 @@
+/* Skills Section - Spider-Man Light Theme */
+
+.skills {
+  position: relative;
+  overflow: visible;
+}
+
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 1.75rem;
+  position: relative;
+  z-index: 2;
+}
+
+.skills-category {
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  padding: 1.75rem;
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-fast);
+}
+
+.skills-category:hover {
+  border-color: var(--spidy-red);
+  transform: translateY(-4px);
+  box-shadow: 0 16px 35px rgba(185, 28, 28, 0.12);
+}
+
+.category-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid var(--spidy-red-light);
+}
+
+.category-badge {
+  font-size: 1.1rem;
+}
+
+.category-title {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 800;
+  font-style: italic;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.skills-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.skill-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.4rem;
+}
+
+.skill-name {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #1E293B;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.skill-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--spidy-red);
+}
+
+.skill-level {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--text-secondary);
+}
+
+.skill-bar {
+  height: 7px;
+  background-color: #E2E8F0;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.skill-bar-fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.skill-bar-fill.high {
+  background: linear-gradient(90deg, #DC2626, #B91C1C);
+}
+
+.skill-bar-fill.medium {
+  background: linear-gradient(90deg, #38BDF8, #0284C7);
+}
+
+.skill-bar-fill.low {
+  background: linear-gradient(90deg, #94A3B8, #64748B);
+}
+
+@media (max-width: 900px) {
+  .hanging-spidy-wrapper {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .skills-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .skills-category {
+    padding: 1.25rem;
+  }
+}
